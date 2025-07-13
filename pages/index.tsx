@@ -1,9 +1,19 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
-import { fetchTokenInfo } from '../lib/coingecko'
+import { fetchTokenInfo } from '../lib/dexscreener'
 import { checkBinanceMarkets } from '../lib/binance'
 import { fetchBridgeInfo } from '../lib/defillama'
+
+const centralizedExchanges = [
+  { name: 'Binance', url: (symbol: string) => `https://www.binance.com/en/trade/${symbol}_USDT` },
+  { name: 'MEXC', url: (symbol: string) => `https://www.mexc.com/exchange/${symbol}_USDT` },
+  { name: 'Bitget', url: (symbol: string) => `https://www.bitget.com/en/spot/${symbol}USDT` },
+  { name: 'Bybit', url: (symbol: string) => `https://www.bybit.com/en/trade/spot/${symbol}/USDT` },
+  { name: 'Weex', url: (symbol: string) => `https://www.weex.com/en-us/spot/${symbol}_USDT` },
+  { name: 'BingX', url: (symbol: string) => `https://bingx.com/en-us/spot/${symbol}-USDT` },
+  { name: 'OKX', url: (symbol: string) => `https://www.okx.com/trade-spot/${symbol}-usdt` }
+]
 
 export default function Home() {
   const { t, i18n } = useTranslation()
@@ -70,9 +80,7 @@ export default function Home() {
         <div className="mt-6 space-y-4 border p-4 rounded dark:border-gray-600">
           <img src={token.image} alt={token.name} className="h-12" />
           <h2 className="text-xl font-semibold">{token.name} ({token.symbol.toUpperCase()})</h2>
-          <p><strong>Price:</strong> ${token.market_data.current_price.usd}</p>
-          <p><strong>Market Cap:</strong> ${token.market_data.market_cap.usd.toLocaleString()}</p>
-          <p><strong>Platforms:</strong> {Object.keys(token.platforms).join(', ')}</p>
+          <p><strong>Price:</strong> ${token.priceUsd}</p>
 
           {binance && (
             <div>
@@ -81,6 +89,24 @@ export default function Home() {
               <p>Futures: {binance.futures ? <a href={binance.futuresLink} target="_blank" className="text-blue-400 underline">Yes</a> : 'No'}</p>
             </div>
           )}
+
+          <div>
+            <h3 className="font-bold mt-4">Available on Exchanges</h3>
+            <ul className="list-disc pl-6">
+              {centralizedExchanges.map((ex, idx) => (
+                <li key={idx}>
+                  <a
+                    href={ex.url(token.symbol.toUpperCase())}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 underline"
+                  >
+                    {ex.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {bridges.length > 0 && (
             <div>
@@ -97,3 +123,4 @@ export default function Home() {
     </div>
   )
 }
+
