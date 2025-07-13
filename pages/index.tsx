@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
-import { getTokenSymbolFromAddress } from '../lib/coingecko'
-import { checkCEXMarkets } from '../lib/binance'
+import { fetchTokenFromCMC, fetchMarketPairsFromCMC } from '../lib/coinmarketcap'
 
 export default function Home() {
   const { t, i18n } = useTranslation()
@@ -10,20 +9,20 @@ export default function Home() {
   const [address, setAddress] = useState('')
   const [token, setToken] = useState<any>(null)
   const [error, setError] = useState('')
-  const [markets, setMarkets] = useState<any>(null)
+  const [markets, setMarkets] = useState<{ spot: string[]; futures: string[] }>({ spot: [], futures: [] })
 
   async function handleSearch() {
     try {
       setError('')
-      const info = await getTokenSymbolFromAddress(address)
-      setToken(info)
+      const data = await fetchTokenFromCMC(address)
+      setToken(data)
 
-      const marketResults = await checkCEXMarkets(info.symbol)
-      setMarkets(marketResults)
+      const marketData = await fetchMarketPairsFromCMC(data.id)
+      setMarkets(marketData)
     } catch (err: any) {
       setError(err.message)
       setToken(null)
-      setMarkets(null)
+      setMarkets({ spot: [], futures: [] })
     }
   }
 
@@ -62,33 +61,27 @@ export default function Home() {
 
       {token && (
         <div className="mt-6 space-y-4 border p-4 rounded dark:border-gray-600">
-          {token.image && (
-            <img src={token.image} alt={token.name} className="h-12" />
-          )}
+          <img src={token.image} alt={token.name} className="h-12" />
           <h2 className="text-xl font-semibold">{token.name} ({token.symbol})</h2>
+          <p><strong>Platforms:</strong> {token.platforms.join(', ') || 'N/A'}</p>
 
-          {markets && (
-            <div>
-              <h3 className="font-bold mt-4">Available on CEXs</h3>
+          <div>
+            <h3 className="font-bold mt-4">Spot Exchanges</h3>
+            {markets.spot.length > 0 ? (
               <ul className="list-disc pl-6">
-                {Object.entries(markets).map(([exchange, info]: any, idx) => (
-                  <li key={idx}>
-                    {exchange}: {info.spot ? (
-                      <a href={info.spotLink} target="_blank" className="text-blue-400 underline">Spot</a>
-                    ) : 'No Spot'}
-                    {info.futures !== undefined && (
-                      <>
-                        {" | "}
-                        {info.futures ? (
-                          <a href={info.futuresLink} target="_blank" className="text-blue-400 underline">Futures</a>
-                        ) : 'No Futures'}
-                      </>
-                    )}
-                  </li>
-                ))}
+                {markets.spot.map((ex, idx) => <li key={idx}>{ex}</li>)}
               </ul>
-            </div>
-          )}
+            ) : <p>None found</p>}
+          </div>
+
+          <div>
+            <h3 className="font-bold mt-4">Futures Exchanges</h3>
+            {markets.futures.length > 0 ? (
+              <ul className="list-disc pl-6">
+                {markets.futures.map((ex, idx) => <li key={idx}>{ex}</li>)}
+              </ul>
+            ) : <p>None found</p>}
+          </div>
         </div>
       )}
     </div>
