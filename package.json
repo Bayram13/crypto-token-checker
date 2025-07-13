@@ -18,11 +18,10 @@
     "postcss": "^8.4.21",
     "i18next-http-backend": "^2.0.1",
     "i18next-browser-languagedetector": "^7.0.1"
-  }
+  },   <--- burda vergül əlavə et
   "devDependencies": {
-  "typescript": "^5.0.4",
-  "@types/react": "^18.0.28",
-  "@types/node": "^20.4.2"
-}
-
+    "typescript": "^5.0.4",
+    "@types/react": "^18.0.28",
+    "@types/node": "^20.4.2"
+  }
 }
