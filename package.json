@@ -19,7 +19,10 @@
     "i18next-http-backend": "^2.0.1",
     "i18next-browser-languagedetector": "^7.0.1"
   }
+  "devDependencies": {
+  "typescript": "^5.0.4",
+  "@types/react": "^18.0.28",
+  "@types/node": "^20.4.2"
 }
-git add package.json yarn.lock package-lock.json
-git commit -m "Add TypeScript dev dependencies"
-git push
+
+}
