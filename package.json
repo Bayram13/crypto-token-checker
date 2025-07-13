@@ -20,3 +20,6 @@
     "i18next-browser-languagedetector": "^7.0.1"
   }
 }
+git add package.json yarn.lock package-lock.json
+git commit -m "Add TypeScript dev dependencies"
+git push
