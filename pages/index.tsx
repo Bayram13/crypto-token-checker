@@ -1,19 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
-import { fetchTokenInfo } from '../lib/dexscreener'
-import { checkBinanceMarkets } from '../lib/binance'
-import { fetchBridgeInfo } from '../lib/defillama'
-
-const centralizedExchanges = [
-  { name: 'Binance', url: (symbol: string) => `https://www.binance.com/en/trade/${symbol}_USDT` },
-  { name: 'MEXC', url: (symbol: string) => `https://www.mexc.com/exchange/${symbol}_USDT` },
-  { name: 'Bitget', url: (symbol: string) => `https://www.bitget.com/en/spot/${symbol}USDT` },
-  { name: 'Bybit', url: (symbol: string) => `https://www.bybit.com/en/trade/spot/${symbol}/USDT` },
-  { name: 'Weex', url: (symbol: string) => `https://www.weex.com/en-us/spot/${symbol}_USDT` },
-  { name: 'BingX', url: (symbol: string) => `https://bingx.com/en-us/spot/${symbol}-USDT` },
-  { name: 'OKX', url: (symbol: string) => `https://www.okx.com/trade-spot/${symbol}-usdt` }
-]
+import { getTokenSymbolFromAddress } from '../lib/coingecko'
+import { checkCEXMarkets } from '../lib/binance'
 
 export default function Home() {
   const { t, i18n } = useTranslation()
@@ -21,25 +10,20 @@ export default function Home() {
   const [address, setAddress] = useState('')
   const [token, setToken] = useState<any>(null)
   const [error, setError] = useState('')
-  const [binance, setBinance] = useState<any>(null)
-  const [bridges, setBridges] = useState<string[]>([])
+  const [markets, setMarkets] = useState<any>(null)
 
   async function handleSearch() {
     try {
       setError('')
-      const data = await fetchTokenInfo(address)
-      setToken(data)
+      const info = await getTokenSymbolFromAddress(address)
+      setToken(info)
 
-      const binanceResult = await checkBinanceMarkets(data.symbol)
-      setBinance(binanceResult)
-
-      const bridgeChains = await fetchBridgeInfo(address)
-      setBridges(bridgeChains)
+      const marketResults = await checkCEXMarkets(info.symbol)
+      setMarkets(marketResults)
     } catch (err: any) {
       setError(err.message)
       setToken(null)
-      setBinance(null)
-      setBridges([])
+      setMarkets(null)
     }
   }
 
@@ -78,42 +62,29 @@ export default function Home() {
 
       {token && (
         <div className="mt-6 space-y-4 border p-4 rounded dark:border-gray-600">
-          <img src={token.image} alt={token.name} className="h-12" />
-          <h2 className="text-xl font-semibold">{token.name} ({token.symbol.toUpperCase()})</h2>
-          <p><strong>Price:</strong> ${token.priceUsd}</p>
-
-          {binance && (
-            <div>
-              <h3 className="font-bold mt-4">Binance</h3>
-              <p>Spot: {binance.spot ? <a href={binance.spotLink} target="_blank" className="text-blue-400 underline">Yes</a> : 'No'}</p>
-              <p>Futures: {binance.futures ? <a href={binance.futuresLink} target="_blank" className="text-blue-400 underline">Yes</a> : 'No'}</p>
-            </div>
+          {token.image && (
+            <img src={token.image} alt={token.name} className="h-12" />
           )}
+          <h2 className="text-xl font-semibold">{token.name} ({token.symbol})</h2>
 
-          <div>
-            <h3 className="font-bold mt-4">Available on Exchanges</h3>
-            <ul className="list-disc pl-6">
-              {centralizedExchanges.map((ex, idx) => (
-                <li key={idx}>
-                  <a
-                    href={ex.url(token.symbol.toUpperCase())}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 underline"
-                  >
-                    {ex.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {bridges.length > 0 && (
+          {markets && (
             <div>
-              <h3 className="font-bold mt-4">Bridge Chains</h3>
+              <h3 className="font-bold mt-4">Available on CEXs</h3>
               <ul className="list-disc pl-6">
-                {bridges.map((bridge, idx) => (
-                  <li key={idx}>{bridge}</li>
+                {Object.entries(markets).map(([exchange, info]: any, idx) => (
+                  <li key={idx}>
+                    {exchange}: {info.spot ? (
+                      <a href={info.spotLink} target="_blank" className="text-blue-400 underline">Spot</a>
+                    ) : 'No Spot'}
+                    {info.futures !== undefined && (
+                      <>
+                        {" | "}
+                        {info.futures ? (
+                          <a href={info.futuresLink} target="_blank" className="text-blue-400 underline">Futures</a>
+                        ) : 'No Futures'}
+                      </>
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -123,4 +94,3 @@ export default function Home() {
     </div>
   )
 }
-
