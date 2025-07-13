@@ -10,3 +10,11 @@ export async function checkBinanceMarkets(symbol: string) {
   const futuresData = await futuresRes.json()
   const futuresSymbols = futuresData.symbols.map((s: any) => s.symbol)
   const futuresExists = futuresSymbols.includes(`${upper}USDT`)
+
+  return {
+    spot: spotExists,
+    futures: futuresExists,
+    spotLink: `https://www.binance.com/en/trade/${upper}_USDT`,
+    futuresLink: `https://www.binance.com/en/futures/${upper}USDT`
+  }
+}
